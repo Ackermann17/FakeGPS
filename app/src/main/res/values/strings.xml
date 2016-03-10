@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Fake GPS</string>
     <string name="start_button">Start</string>
+    <string name="stop_button">Stop</string>
     <string name="search_button">Search</string>
     <string name="recent_button">Recent</string>
     <string name="google_app_id">1073175197992</string>

@@ -17,7 +17,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -26,23 +25,28 @@ import android.widget.Toast;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
-    LatLng latLng;
+    private LatLng latLng;
     private boolean mockEnabled;
     private LocationManager lm;
     private LocationListener ll;
-    Location newLocationGPS, newLocationNET;
-    ArrayList<LatLng> arrayList;
+    private Location newLocationGPS, newLocationNET;
+    private ArrayList<LatLng> arrayList;
     private ListView list;
     private ArrayAdapter<LatLng> adapter;
+    private static final String SAVED_SETTINGS = "SAVED_SETTINGS";
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -86,7 +90,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         lm.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true);
         lm.setTestProviderEnabled(LocationManager.NETWORK_PROVIDER, true);
     }
-    //Sets Mock Location
+
     private void setMockLocation(double latitude, double longitude) {
         newLocationGPS.setLatitude(latitude);
         newLocationGPS.setLongitude(longitude);
@@ -123,10 +127,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        mockEnabled = false;
-        list = (ListView)findViewById(R.id.listView);
-        arrayList = new ArrayList<>();
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item, arrayList);
+        FileInputStream inputStream;
+        try {
+            inputStream = openFileInput(SAVED_SETTINGS);
+            ObjectInputStream in = new ObjectInputStream(inputStream);
+            mockEnabled = in.readBoolean();
+            latLng = (LatLng) in.readObject();
+            arrayList = (ArrayList<LatLng>) in.readObject();
+            adapter = (ArrayAdapter<LatLng>) in.readObject();
+            inputStream.close();
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (latLng != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        }
+        if(arrayList == null)
+            arrayList = new ArrayList<>();
+        if(adapter == null)
+            adapter = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item, arrayList);
+        list = (ListView) findViewById(R.id.listView);
         list.setAdapter(adapter);
     }
 
@@ -148,18 +169,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void recentButton(View view){
-        list.setVisibility(View.VISIBLE);
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                LatLng recentLatLng = new LatLng(((LatLng)parent.getAdapter().getItem(position)).latitude, ((LatLng)parent.getAdapter().getItem(position)).longitude);
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(recentLatLng, 10));
-                setMockLocation(recentLatLng.latitude, recentLatLng.longitude);
+        if(!arrayList.isEmpty()){
+            if(list.getVisibility() == View.INVISIBLE){
+                list.setVisibility(View.VISIBLE);
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        LatLng recentLatLng = new LatLng(((LatLng) parent.getAdapter().getItem(position)).latitude, ((LatLng) parent.getAdapter().getItem(position)).longitude);
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(recentLatLng, 10));
+                        list.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }else{
                 list.setVisibility(View.INVISIBLE);
             }
-        });
-
-
+        }else{
+            showMessage("No recent locations");
+        }
+        showMessage(String.valueOf(latLng));
+        FileInputStream inputStream;
+        try {
+            inputStream = openFileInput(SAVED_SETTINGS);
+            ObjectInputStream in = new ObjectInputStream(inputStream);
+            showMessage("mockBoolean" +  String.valueOf(in.readBoolean()));
+            showMessage("latLng" + String.valueOf(in.readObject()));
+            inputStream.close();
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void stopButton(View view){
+        if(mockEnabled) {
+            try {
+                lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+                lm.removeTestProvider(LocationManager.NETWORK_PROVIDER);
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+            } catch (SecurityException e) {e.printStackTrace();}
+        }
+        mockEnabled = false;
+        showMessage("Mock OFF");
     }
 
     private void performSearch(String address){
@@ -194,6 +244,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ImageView img=(ImageView)findViewById(R.id.imageView);
         Drawable myDrawable = ContextCompat.getDrawable(this, R.drawable.pin);
         img.setImageDrawable(myDrawable);
+        if(latLng != null){
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        }
         EditText editText = (EditText)findViewById(R.id.search_text);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -210,16 +263,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
+
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onPause() {
+        super.onPause();
+        FileOutputStream outputStream;
+        try {
+            outputStream = openFileOutput(SAVED_SETTINGS, MODE_PRIVATE);
+            ObjectOutputStream out = new ObjectOutputStream(outputStream);
+            out.writeBoolean(mockEnabled);
+            out.writeObject(latLng);
+            out.writeObject(arrayList);
+            out.writeObject(adapter);
+            outputStream.close();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
+
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         if(mockEnabled) {
             try {
                 lm.removeTestProvider(LocationManager.GPS_PROVIDER);
@@ -228,7 +293,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
             } catch (SecurityException e) {e.printStackTrace();}
         }
-        super.onDestroy();
+        mockEnabled = false;
     }
 
     private void showMessage(String s){
