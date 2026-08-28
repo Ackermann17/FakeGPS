@@ -5,16 +5,20 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.IBinder;
 
 public class MockService extends Service {
     private static final String CHANNEL_ID = "MockLocationChannel";
+    private LocationManager lm;
+    private boolean isRunning = false;
+    private Thread mockThread;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        // Membuat saluran (channel) notifikasi untuk Android 8.0 ke atas
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID, "GPS Manual Active", NotificationManager.IMPORTANCE_LOW);
@@ -32,18 +36,55 @@ public class MockService extends Service {
             builder = new Notification.Builder(this);
         }
 
-        // Desain notifikasi latar belakang
         Notification notification = builder
                 .setContentTitle("GPS Manual Aktif")
-                .setContentText("Lokasi palsu sedang berjalan di latar belakang.")
-                .setSmallIcon(R.mipmap.ic_launcher) // Menggunakan ikon utama aplikasi
-                .setOngoing(true) // Tidak bisa di-swipe oleh pengguna
+                .setContentText("Lokasi terkunci dan memancar di latar belakang.")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setOngoing(true)
                 .build();
-
-        // Mulai layanan agar aplikasi kebal dari kill sistem
         startForeground(1, notification);
 
+        // Tangkap koordinat yang dikirim dari MapsActivity
+        if (intent != null) {
+            final double lat = intent.getDoubleExtra("lat", 0);
+            final double lng = intent.getDoubleExtra("lng", 0);
+
+            if (lm == null) lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+            isRunning = true;
+            if (mockThread != null) mockThread.interrupt();
+
+            // Mesin pemancar lokasi dipindah ke sini agar kebal swipe
+            mockThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (isRunning) {
+                        try {
+                            Location loc = new Location(LocationManager.GPS_PROVIDER);
+                            loc.setLatitude(lat);
+                            loc.setLongitude(lng);
+                            loc.setAltitude(0);
+                            loc.setAccuracy(1f);
+                            loc.setTime(System.currentTimeMillis());
+                            loc.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
+                            lm.setTestProviderLocation(LocationManager.GPS_PROVIDER, loc);
+                            Thread.sleep(1000); // Pancarkan setiap 1 detik
+                        } catch (Exception e) {
+                            // Abaikan error diam-diam agar thread tidak mati
+                        }
+                    }
+                }
+            });
+            mockThread.start();
+        }
         return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        isRunning = false; // Matikan mesin pemancar saat Service dihentikan
+        if (mockThread != null) mockThread.interrupt();
+        super.onDestroy();
     }
 
     @Override

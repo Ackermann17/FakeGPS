@@ -231,6 +231,8 @@ public void startButton(View view) {
     
     // Jalankan layanan latar belakang (Foreground Service)
 	android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+	serviceIntent.putExtra("lat", latLng.latitude); // <-- KIRIM LATITUDE
+	serviceIntent.putExtra("lng", latLng.longitude); // <-- KIRIM LONGITUDE
 	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 	    startForegroundService(serviceIntent);
 	} else {
@@ -274,22 +276,28 @@ public void startButton(View view) {
             e.printStackTrace();
         }
     }
-    public void stopButton(View view){
-        if(mockEnabled) {
-            try {
-                lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-                lm.removeTestProvider(LocationManager.NETWORK_PROVIDER);
-                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-            } catch (SecurityException e) {e.printStackTrace();}
-        }
-        mockEnabled = false;
-        showMessage("Mock OFF");
-	// Hentikan layanan latar belakang
-	android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
-	stopService(serviceIntent);
 
+public void stopButton(View view) {
+    // 1. Anti Force-Close: Cek dan inisialisasi ulang LocationManager jika null
+    try {
+        if (lm == null) {
+            lm = (android.location.LocationManager) getSystemService(LOCATION_SERVICE);
+        }
+        lm.removeTestProvider(android.location.LocationManager.GPS_PROVIDER);
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    // 2. Matikan Foreground Service (yang berisi mesin pemancar)
+    try {
+        android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+        stopService(serviceIntent);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    android.widget.Toast.makeText(this, "Lokasi Palsu Dihentikan", android.widget.Toast.LENGTH_SHORT).show();
+}
 
     private void performSearch(String address){
         EditText editText = (EditText)findViewById(R.id.search_text);
@@ -395,22 +403,12 @@ public void onMapReady(GoogleMap googleMap) {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-	if (mockHandler != null && mockRunnable != null) {
-        mockHandler.removeCallbacks(mockRunnable);
-    }
-        if(mockEnabled) {
-            try {
-                lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-                lm.removeTestProvider(LocationManager.NETWORK_PROVIDER);
-                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-            } catch (SecurityException e) {e.printStackTrace();}
-        }
-        mockEnabled = false;
-    }
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    // Semua logika pemati lokasi dihapus dari sini 
+    // agar lokasi palsu tetap hidup walau aplikasi di-swipe!
+}
 
     private void showMessage(String s){
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
