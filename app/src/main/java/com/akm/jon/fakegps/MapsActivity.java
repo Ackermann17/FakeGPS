@@ -190,9 +190,9 @@ private void setMockLocation(final double latitude, final double longitude) {
         list = (ListView) findViewById(R.id.listView);
         list.setAdapter(adapter);
     }
-
+    
     public void startButton(View view) {
-    // 1. Cek apakah Mock Location sudah diaktifkan di Developer Options
+    // 1. Validasi ketat Developer Options
 	    try {
 	        lm.addTestProvider(LocationManager.GPS_PROVIDER,
 	                false, false, false, false, false, false, false,
@@ -200,20 +200,19 @@ private void setMockLocation(final double latitude, final double longitude) {
 	                android.location.Criteria.ACCURACY_FINE);
 	        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
 	    } catch (SecurityException e) {
-	        // Jika belum dipilih di Developer Options
+	        // Jika belum dipilih di Developer Options, tampilkan Toast dan STOP di sini!
 	        android.widget.Toast.makeText(this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
-	        return; 
+	        return; // PENTING: Menghentikan eksekusi agar tidak lanjut ke startMockProvider()
 	    } catch (Exception e) {
-	        // Menangkap error konflik provider agar tidak Force Close
 	        e.printStackTrace();
+	        return;
 	    }
 
-	    // 2. Jalankan inisialisasi provider jika belum aktif
+	    // 2. Jika lolos validasi, baru jalankan mock provider & set lokasinya
 	    if (!mockEnabled) {
 	        startMockProvider();
 	    }
 
-	    // 3. Ambil koordinat dan mulai memancarkan lokasi palsu
 	    latLng = mMap.getCameraPosition().target;
 	    setMockLocation(latLng.latitude, latLng.longitude);
 
