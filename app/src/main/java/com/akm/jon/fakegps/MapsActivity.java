@@ -190,8 +190,7 @@ private void setMockLocation(final double latitude, final double longitude) {
         list = (ListView) findViewById(R.id.listView);
         list.setAdapter(adapter);
     }
-    
-}
+   
 
 public void startButton(View view) {
     // Pastikan LocationManager sudah siap
