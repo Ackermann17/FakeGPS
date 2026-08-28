@@ -307,16 +307,19 @@ public void startButton(View view) {
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-	try {
+ 
+   @Override
+public void onMapReady(GoogleMap googleMap) {
+    mMap = googleMap;
+
+    try {
         if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
                 == android.content.pm.PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        }
-	mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+
+            // Kamera otomatis mengarah ke titik biru saat lokasi pertama kali didapat
+            mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
                 private boolean isFirstLocation = true;
 
                 @Override
@@ -324,10 +327,9 @@ public void startButton(View view) {
                     if (isFirstLocation && location != null) {
                         com.google.android.gms.maps.model.LatLng currentLatLng = 
                             new com.google.android.gms.maps.model.LatLng(location.getLatitude(), location.getLongitude());
-                        
-                        // Geser kamera ke titik biru dengan tingkat zoom 15
+
                         mMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
-                        isFirstLocation = false; // Hanya sekali saat pertama buka
+                        isFirstLocation = false;
                     }
                 }
             });
@@ -335,28 +337,7 @@ public void startButton(View view) {
     } catch (SecurityException e) {
         e.printStackTrace();
     }
-        ImageView img=(ImageView)findViewById(R.id.imageView);
-        Drawable myDrawable = ContextCompat.getDrawable(this, R.drawable.pin);
-        img.setImageDrawable(myDrawable);
-        if(latLng != null){
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        }
-        EditText editText = (EditText)findViewById(R.id.search_text);
-        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (event != null && (event.getKeyCode() == KeyEvent.KEYCODE_SEARCH)) {
-                    InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    in.hideSoftInputFromWindow(v.getApplicationWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                }
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    performSearch(v.getText().toString());
-                    return true;
-                }
-                return false;
-            }
-        });
-    }
+}
 
     @Override
     protected void onPause() {
