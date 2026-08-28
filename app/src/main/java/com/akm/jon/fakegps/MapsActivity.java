@@ -2,6 +2,7 @@ package com.akm.jon.fakegps;
 
 import com.akm.jon.fakegps.R;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -9,7 +10,10 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.os.Build;
 import android.os.Bundle;
+import android.net.Uri;
+import android.provider.Settings;
 import androidx.fragment.app.FragmentActivity;
 import androidx.core.content.ContextCompat;
 import android.view.KeyEvent;
@@ -94,7 +98,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         lm.setTestProviderEnabled(LocationManager.NETWORK_PROVIDER, true);
     }
 
-    
+private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
+
+private void checkAndRequestOverlayPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (!Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "Izinkan 'Tampilkan di atas aplikasi lain' / 'Jendela pop-up' agar Floating Button aktif", Toast.LENGTH_LONG).show();
+            
+            Intent intent = new Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName())
+            );
+            startActivityForResult(intent, OVERLAY_PERMISSION_REQ_CODE);
+        } else {
+            // Izin sudah diberikan, aman untuk jalankan MockService
+            startMockService();
+        }
+    } else {
+        startMockService();
+    }
+}
+
 private void setMockLocation(final double latitude, final double longitude) {
     if (mockRunnable != null) {
         mockHandler.removeCallbacks(mockRunnable);
@@ -197,17 +221,28 @@ public void startButton(View view) {
 
         // Cek Developer Options
         try {
-            lm.addTestProvider(LocationManager.GPS_PROVIDER, false, false, false, false, false, false, false, android.location.Criteria.POWER_LOW, android.location.Criteria.ACCURACY_FINE);
-            lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+            lm.addTestProvider(android.location.LocationManager.GPS_PROVIDER, false, false, false, false, false, false, false, 1, 1);
+            lm.removeTestProvider(android.location.LocationManager.GPS_PROVIDER);
         } catch (SecurityException e) {
-            android.widget.Toast.makeText(this, "⚠️ Harap atur Mock Location di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
-            return; 
+            android.widget.Toast.makeText(this, "⚠️ Harap atur Mock Location di Developer Options", android.widget.Toast.LENGTH_SHORT).show();
+            return;
         } catch (Exception e) {}
+
+        // KODE 2: Cek izin Overlay / Pop-up Xiaomi sebelum kirim Intent
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                android.widget.Toast.makeText(this, "Izinkan 'Tampilkan di atas aplikasi lain' / 'Jendela pop-up'", android.widget.Toast.LENGTH_LONG).show();
+                
+                // Jika di HP Xiaomi, langsung arahkan ke menu di screenshot Anda (Kode 3)
+                openMiuiPermissionScreen();
+                return;
+            }
+        }
 
         // Ambil koordinat
         latLng = mMap.getCameraPosition().target;
 
-        // Kirim perintah ke Service Baru
+        // Kirim perintah ke Service baru
         android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
         serviceIntent.putExtra("lat", latLng.latitude);
         serviceIntent.putExtra("lng", latLng.longitude);
@@ -218,7 +253,7 @@ public void startButton(View view) {
             startService(serviceIntent);
         }
 
-        mockEnabled = true; // Set status berjalan
+        mockEnabled = true;
         android.widget.Toast.makeText(this, "✅ Lokasi Dimulai!", android.widget.Toast.LENGTH_SHORT).show();
 
     } catch (Exception e) {
@@ -297,6 +332,22 @@ public void stopButton(View view) {
             }catch(IOException e){e.printStackTrace();}
         }
     }
+// Letakkan method ini berdiri sendiri di bawah stopButton()
+public void openMiuiPermissionScreen() {
+    android.content.Intent intent = new android.content.Intent("miui.intent.action.APP_PERM_EDITOR");
+    intent.setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity");
+    intent.putExtra("extra_pkgname", getPackageName());
+    try {
+        startActivity(intent);
+    } catch (Exception e) {
+        // Fallback jika bukan perangkat MIUI / gagal buka menu khusus
+        android.content.Intent defaultIntent = new android.content.Intent(
+            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            android.net.Uri.parse("package:" + getPackageName())
+        );
+        startActivity(defaultIntent);
+    }
+}
 
     /**
      * Manipulates the map once available.

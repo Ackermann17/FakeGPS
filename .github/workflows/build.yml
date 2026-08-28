@@ -12,16 +12,27 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
       - name: Grant Execute Permission
         run: chmod +x gradlew
-      - name: Build APK
+
+      # Decode Keystore Base64 ke dalam folder app
+      - name: Decode Keystore File
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release-key.jks
+
+      # Build Release APK dengan API Key dan variabel Signature
+      - name: Build Release APK
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-        run: ./gradlew assembleDebug
-      - name: Upload APK
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      # Upload hasil APK Release yang sudah ditandatangani
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: FakeGPS-Debug-APK
-          path: '**/*.apk'
-
-
+          name: FakeGPS-Release-APK
+          path: app/build/outputs/apk/release/*.apk

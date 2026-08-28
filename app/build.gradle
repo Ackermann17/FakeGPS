@@ -12,10 +12,20 @@ android {
         versionName "1.0"
 	manifestPlaceholders = [MAPS_API_KEY: System.getenv("MAPS_API_KEY") ?: ""]
     }
+    signingConfigs {
+        release {
+            // Membaca file keystore yang didecode oleh GitHub Actions
+            storeFile file("release-key.jks")
+            storePassword System.getenv("RELEASE_KEYSTORE_PASSWORD")
+            keyAlias System.getenv("RELEASE_KEY_ALIAS")
+            keyPassword System.getenv("RELEASE_KEY_PASSWORD")
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+	    signingConfig signingConfigs.release
         }
     }
     compileOptions {
