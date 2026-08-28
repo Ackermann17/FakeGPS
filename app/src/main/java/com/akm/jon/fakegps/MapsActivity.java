@@ -310,6 +310,31 @@ public void startButton(View view) {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+	try {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
+                == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        }
+	mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+                private boolean isFirstLocation = true;
+
+                @Override
+                public void onMyLocationChange(android.location.Location location) {
+                    if (isFirstLocation && location != null) {
+                        com.google.android.gms.maps.model.LatLng currentLatLng = 
+                            new com.google.android.gms.maps.model.LatLng(location.getLatitude(), location.getLongitude());
+                        
+                        // Geser kamera ke titik biru dengan tingkat zoom 15
+                        mMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
+                        isFirstLocation = false; // Hanya sekali saat pertama buka
+                    }
+                }
+            });
+        }
+    } catch (SecurityException e) {
+        e.printStackTrace();
+    }
         ImageView img=(ImageView)findViewById(R.id.imageView);
         Drawable myDrawable = ContextCompat.getDrawable(this, R.drawable.pin);
         img.setImageDrawable(myDrawable);
