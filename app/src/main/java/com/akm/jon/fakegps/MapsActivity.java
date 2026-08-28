@@ -191,38 +191,40 @@ private void setMockLocation(final double latitude, final double longitude) {
         list.setAdapter(adapter);
     }
     
-	public void startButton(View view) {
-	    // 1. Validasi ketat Developer Options
-	    try {
-	        lm.addTestProvider(LocationManager.GPS_PROVIDER,
-	                false, false, false, false, false, false, false,
-	                android.location.Criteria.POWER_LOW,
-	                android.location.Criteria.ACCURACY_FINE);
-	        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-	    } catch (SecurityException e) {
-	        // Gunakan MapsActivity.this agar Toast pasti muncul di layar
-	        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
-	        return; 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return;
-	    }
+public void startButton(View view) {
+    // 1. Validasi ketat Developer Options
+    try {
+        lm.addTestProvider(LocationManager.GPS_PROVIDER,
+                false, false, false, false, false, false, false,
+                android.location.Criteria.POWER_LOW,
+                android.location.Criteria.ACCURACY_FINE);
+        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+    } catch (SecurityException e) {
+        // Jalur A: Belum dipilih di Developer Options
+        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Belum diatur di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
+        return; 
+    } catch (Exception e) {
+        // Jalur B: Terjadi error sistem lain
+        e.printStackTrace();
+        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+        return;
+    }
 
-	    // 2. Jika lolos validasi, jalankan mock provider & set lokasinya
-	    if (!mockEnabled) {
-	        startMockProvider();
-	    }
+    // 2. Jika lolos validasi, jalankan mock provider & set lokasinya
+    if (!mockEnabled) {
+        startMockProvider();
+    }
 
-	    latLng = mMap.getCameraPosition().target;
-	    setMockLocation(latLng.latitude, latLng.longitude);
+    latLng = mMap.getCameraPosition().target;
+    setMockLocation(latLng.latitude, latLng.longitude);
 
-	    try {
-	        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-	        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-	    } catch (SecurityException e) {
-	        e.printStackTrace();
-	    }
-	}
+    try {
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
+    } catch (SecurityException e) {
+        e.printStackTrace();
+    }
+}
 
 
     public void searchButton(View view){
