@@ -94,19 +94,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void setMockLocation(double latitude, double longitude) {
         newLocationGPS.setLatitude(latitude);
-        newLocationGPS.setLongitude(longitude);
-        newLocationGPS.setAccuracy(16F);
-        newLocationGPS.setTime(System.currentTimeMillis());
-        newLocationGPS.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
-        newLocationGPS.setAltitude(0D);
-        newLocationGPS.setBearing(0F);
-        newLocationNET.setLatitude(latitude);
-        newLocationNET.setLongitude(longitude);
-        newLocationNET.setAccuracy(16F);
-        newLocationNET.setTime(System.currentTimeMillis());
-        newLocationNET.android.os.SystemClock.elapsedRealtimeNanos());
-        newLocationNET.setAltitude(0D);
-        newLocationNET.setBearing(0F);
+	newLocationGPS.setLongitude(longitude);
+	newLocationGPS.setAccuracy(16F);
+	newLocationGPS.setTime(System.currentTimeMillis());
+	newLocationGPS.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
+	newLocationGPS.setAltitude(0D);
+	newLocationGPS.setBearing(0F);
+
+	newLocationNET.setLatitude(latitude);
+	newLocationNET.setLongitude(longitude);
+	newLocationNET.setAccuracy(16F);
+	newLocationNET.setTime(System.currentTimeMillis());
+	newLocationNET.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
+	newLocationNET.setAltitude(0D);
+	newLocationNET.setBearing(0F);
+
         lm.setTestProviderStatus(LocationManager.GPS_PROVIDER,
                 LocationProvider.AVAILABLE,
                 null, System.currentTimeMillis());
