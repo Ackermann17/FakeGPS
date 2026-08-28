@@ -16,10 +16,10 @@ jobs:
       - name: Grant Execute Permission
         run: chmod +x gradlew
 
-      # Decode Keystore Base64 ke dalam folder app
+      # Sesudah (baru)
       - name: Decode Keystore File
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release-key.jks
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release-key.jks
 
       # Build Release APK dengan API Key dan variabel Signature
       - name: Build Release APK
