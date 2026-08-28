@@ -230,6 +230,7 @@ public void startButton(View view) {
     }
 }
 
+
     public void searchButton(View view){
         EditText editText = (EditText)findViewById(R.id.search_text);
         String address = editText.getText().toString();
