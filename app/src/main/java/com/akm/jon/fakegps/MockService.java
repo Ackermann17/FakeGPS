@@ -128,7 +128,7 @@ public class MockService extends Service {
 	// KODE BARU (Bulat / Circular Floating Widget)
 	floatingButton = new Button(this);
 	floatingButton.setText("■"); // Simbol Stop (atau isi dengan "STOP")
-	floatingButton.setTextSize(28f);
+	floatingButton.setTextSize(18f);
 	floatingButton.setTextColor(Color.WHITE);
 
 	// Membuat background bulat berwarna merah
@@ -138,7 +138,7 @@ public class MockService extends Service {
 	floatingButton.setBackground(shape);
 
 	// Mengatur ukuran tombol agar simetris (misal 60dp x 60dp)
-	int sizeInPx = (int) (40 * getResources().getDisplayMetrics().density);
+	int sizeInPx = (int) (45 * getResources().getDisplayMetrics().density);
 	params.width = sizeInPx;
 	params.height = sizeInPx;
 
@@ -178,6 +178,20 @@ public class MockService extends Service {
         });
 
         windowManager.addView(floatingButton, params);
+	android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.15f);
+        android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.15f);
+        
+        scaleX.setDuration(800); // Kecepatan membesar (800ms)
+        scaleY.setDuration(800);
+        
+        scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE); // Ulangi terus
+        scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        
+        scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE); // Membesar lalu mengecil
+        scaleY.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+        
+        scaleX.start();
+        scaleY.start();
     }
 
     private void createNotificationChannel() {
