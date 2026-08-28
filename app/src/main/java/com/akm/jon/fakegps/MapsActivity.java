@@ -213,7 +213,7 @@ public void startButton(View view) {
         android.widget.Toast.makeText(MapsActivity.this, "⚠️ Error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
         return;
     }
-
+    
     // 2. Jika lolos validasi, jalankan mock provider & set lokasinya
     if (!mockEnabled) {
         startMockProvider();
@@ -228,9 +228,15 @@ public void startButton(View view) {
     } catch (SecurityException e) {
         e.printStackTrace();
     }
-}
-
-
+    
+    // Jalankan layanan latar belakang (Foreground Service)
+	android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+	    startForegroundService(serviceIntent);
+	} else {
+	    startService(serviceIntent);
+	}
+    }
     public void searchButton(View view){
         EditText editText = (EditText)findViewById(R.id.search_text);
         String address = editText.getText().toString();
@@ -279,6 +285,10 @@ public void startButton(View view) {
         }
         mockEnabled = false;
         showMessage("Mock OFF");
+	// Hentikan layanan latar belakang
+	android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+	stopService(serviceIntent);
+
     }
 
     private void performSearch(String address){
