@@ -46,6 +46,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Location newLocationGPS, newLocationNET;
     private ArrayList<LatLng> arrayList;
     private ListView list;
+    private android.os.Handler mockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable mockRunnable;
     private ArrayAdapter<LatLng> adapter;
     private static final String SAVED_SETTINGS = "SAVED_SETTINGS";
 
@@ -92,35 +94,63 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         lm.setTestProviderEnabled(LocationManager.NETWORK_PROVIDER, true);
     }
 
-    private void setMockLocation(double latitude, double longitude) {
-        newLocationGPS.setLatitude(latitude);
-	newLocationGPS.setLongitude(longitude);
-	newLocationGPS.setAccuracy(16F);
-	newLocationGPS.setTime(System.currentTimeMillis());
-	newLocationGPS.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
-	newLocationGPS.setAltitude(0D);
-	newLocationGPS.setBearing(0F);
+    private android.os.Handler mockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+private Runnable mockRunnable;
 
-	newLocationNET.setLatitude(latitude);
-	newLocationNET.setLongitude(longitude);
-	newLocationNET.setAccuracy(16F);
-	newLocationNET.setTime(System.currentTimeMillis());
-	newLocationNET.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
-	newLocationNET.setAltitude(0D);
-	newLocationNET.setBearing(0F);
-
-        lm.setTestProviderStatus(LocationManager.GPS_PROVIDER,
-                LocationProvider.AVAILABLE,
-                null, System.currentTimeMillis());
-        lm.setTestProviderLocation(LocationManager.GPS_PROVIDER, newLocationGPS);
-        lm.setTestProviderStatus(LocationManager.NETWORK_PROVIDER,
-                LocationProvider.AVAILABLE,
-                null, System.currentTimeMillis());
-        lm.setTestProviderLocation(LocationManager.NETWORK_PROVIDER, newLocationNET);
-        showMessage("Mock ON");
-        mockEnabled = true;
-        adapter.add(latLng);
+private void setMockLocation(final double latitude, final double longitude) {
+    if (mockRunnable != null) {
+        mockHandler.removeCallbacks(mockRunnable);
     }
+
+    mockRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                long nowRealtime = android.os.SystemClock.elapsedRealtimeNanos();
+                long nowTime = System.currentTimeMillis();
+
+                newLocationGPS.setLatitude(latitude);
+                newLocationGPS.setLongitude(longitude);
+                newLocationGPS.setAccuracy(16F);
+                newLocationGPS.setTime(nowTime);
+                newLocationGPS.setElapsedRealtimeNanos(nowRealtime);
+                newLocationGPS.setAltitude(0D);
+                newLocationGPS.setBearing(0F);
+
+                newLocationNET.setLatitude(latitude);
+                newLocationNET.setLongitude(longitude);
+                newLocationNET.setAccuracy(16F);
+                newLocationNET.setTime(nowTime);
+                newLocationNET.setElapsedRealtimeNanos(nowRealtime);
+                newLocationNET.setAltitude(0D);
+                newLocationNET.setBearing(0F);
+
+                lm.setTestProviderStatus(LocationManager.GPS_PROVIDER,
+                        LocationProvider.AVAILABLE,
+                        null, nowTime);
+                lm.setTestProviderLocation(LocationManager.GPS_PROVIDER, newLocationGPS);
+                
+                lm.setTestProviderStatus(LocationManager.NETWORK_PROVIDER,
+                        LocationProvider.AVAILABLE,
+                        null, nowTime);
+                lm.setTestProviderLocation(LocationManager.NETWORK_PROVIDER, newLocationNET);
+
+                // Ulangi terus setiap 1 detik (1000 milidetik)
+                mockHandler.postDelayed(this, 1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    mockHandler.post(mockRunnable);
+    
+    // Pesan status awal
+    showMessage("Mock ON");
+    mockEnabled = true;
+    // adapter.add(latLng); // Sesuaikan dengan variabel list Anda jika ada
+}
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -288,6 +318,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onDestroy() {
         super.onDestroy();
+	if (mockHandler != null && mockRunnable != null) {
+        mockHandler.removeCallbacks(mockRunnable);
+    }
         if(mockEnabled) {
             try {
                 lm.removeTestProvider(LocationManager.GPS_PROVIDER);
