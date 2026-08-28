@@ -154,6 +154,15 @@ private void setMockLocation(final double latitude, final double longitude) {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+	if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        
+        androidx.core.app.ActivityCompat.requestPermissions(this,
+                new String[]{
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                }, 1);
+	    }
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -183,6 +192,17 @@ private void setMockLocation(final double latitude, final double longitude) {
     }
 
     public void startButton(View view) {
+	try {
+        lm.addTestProvider(LocationManager.GPS_PROVIDER,
+                false, false, false, false, false, false, false,
+                android.location.Criteria.POWER_LOW,
+                android.location.Criteria.ACCURACY_FINE);
+        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+    } catch (SecurityException e) {
+        // Jika gagal, berarti belum dipilih di Developer Options
+        android.widget.Toast.makeText(this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
+        return; // Batalkan proses start
+    }
         if(!mockEnabled)
             startMockProvider();
         latLng = mMap.getCameraPosition().target;
