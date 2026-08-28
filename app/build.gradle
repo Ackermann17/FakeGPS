@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 34
-    buildToolsVersion "23.0.2"
+    namespace 'com.akm.jon.fakegps'
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.akm.jon.fakegps"
