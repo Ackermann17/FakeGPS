@@ -322,6 +322,15 @@ public void startButton(View view) {
 public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
 
+	// Minta izin notifikasi untuk Android 13 ke atas (Tiramisu/API 33+)
+	if (android.os.Build.VERSION.SDK_INT >= 33) {
+	    if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) 
+	            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+	        androidx.core.app.ActivityCompat.requestPermissions(this, 
+	                new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+	    }
+	}
+
     try {
         if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
                 == android.content.pm.PackageManager.PERMISSION_GRANTED) {

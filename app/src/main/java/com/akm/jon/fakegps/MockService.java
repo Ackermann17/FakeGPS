@@ -36,7 +36,7 @@ public class MockService extends Service {
         Notification notification = builder
                 .setContentTitle("GPS Manual Aktif")
                 .setContentText("Lokasi palsu sedang berjalan di latar belakang.")
-                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setSmallIcon(R.mipmap.ic_launcher) // Menggunakan ikon utama aplikasi
                 .setOngoing(true) // Tidak bisa di-swipe oleh pengguna
                 .build();
 
