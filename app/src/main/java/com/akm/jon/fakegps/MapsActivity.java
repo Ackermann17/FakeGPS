@@ -1,4 +1,4 @@
-package com.akm.jon.fakegps;
+packagecom.akm.jon.fakegps;
 
 import com.akm.jon.fakegps.R;
 import android.content.Context;
@@ -297,36 +297,33 @@ public void startButton(View view) {
         performSearch(address);
     }
 
-  public void recentButton(View view) {
-    // Pastikan arrayList tidak kosong
-    if (arrayList != null && !arrayList.isEmpty()) {
-        
-        // Toggle (Buka/Tutup) ListView
-        if (list.getVisibility() == android.view.View.INVISIBLE || list.getVisibility() == android.view.View.GONE) {
-            list.setVisibility(android.view.View.VISIBLE);
-            
-            // Set aksi ketika salah satu riwayat diklik
-            list.setOnItemClickListener(new android.widget.AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                    // Pindah kamera ke lokasi recent yang diklik
-                    com.google.android.gms.maps.model.LatLng recentLatLng = arrayList.get(position);
-                    mMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(recentLatLng, 15)); // Zoom level 15
-                    
-                    // Sembunyikan list setelah diklik
-                    list.setVisibility(android.view.View.INVISIBLE);
-                }
-            });
-        } else {
-            // Jika sedang terbuka, maka tutup
-            list.setVisibility(android.view.View.INVISIBLE);
-        }
-        
-    } else {
-        // Tampilkan pesan jika belum ada riwayat
-        android.widget.Toast.makeText(this, "Belum ada riwayat lokasi", android.widget.Toast.LENGTH_SHORT).show();
-    }
-}
+	 public void recentButton(View view) {
+	    // 1. Indikator untuk memastikan tombol benar-benar bereaksi saat diklik
+	    android.widget.Toast.makeText(this, "Memeriksa riwayat...", android.widget.Toast.LENGTH_SHORT).show();
+
+	    if (arrayList != null && !arrayList.isEmpty()) {
+	        if (list.getVisibility() == android.view.View.INVISIBLE || list.getVisibility() == android.view.View.GONE) {
+	            
+	            // 2. PAKSA LISTVIEW TAMPIL DI ATAS GOOGLE MAPS (Sangat Penting!)
+	            list.bringToFront(); 
+	            list.setVisibility(android.view.View.VISIBLE);
+	            
+	            list.setOnItemClickListener(new android.widget.AdapterView.OnItemClickListener() {
+	                @Override
+	                public void onItemClick(android.widget.AdapterView<?> parent, View view, int position, long id) {
+	                    com.google.android.gms.maps.model.LatLng recentLatLng = arrayList.get(position);
+	                    mMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(recentLatLng, 15));
+	                    list.setVisibility(android.view.View.INVISIBLE);
+	                }
+	            });
+	        } else {
+	            list.setVisibility(android.view.View.INVISIBLE);
+	        }
+	    } else {
+	        android.widget.Toast.makeText(this, "Belum ada riwayat lokasi", android.widget.Toast.LENGTH_SHORT).show();
+	    }
+	}
+
 
 public void stopButton(View view) {
     try {
