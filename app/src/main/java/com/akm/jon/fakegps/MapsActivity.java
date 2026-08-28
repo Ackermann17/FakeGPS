@@ -264,8 +264,6 @@ public void startButton(View view) {
         }
     }
 
-}
-
 public void stopButton(View view) {
     try {
         // Langsung matikan service, sisanya akan diurus otomatis oleh MockService
