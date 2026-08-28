@@ -191,54 +191,41 @@ private void setMockLocation(final double latitude, final double longitude) {
         list.setAdapter(adapter);
     }
    
-
 public void startButton(View view) {
-    // Pastikan LocationManager sudah siap
-    if (lm == null) {
-        lm = (android.location.LocationManager) getSystemService(LOCATION_SERVICE);
-    }
-
-    // 1. Validasi ketat Developer Options
     try {
-        lm.addTestProvider(LocationManager.GPS_PROVIDER,
-                false, false, false, false, false, false, false,
-                android.location.Criteria.POWER_LOW,
-                android.location.Criteria.ACCURACY_FINE);
-        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-    } catch (SecurityException e) {
-        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
-        return; 
+        if (lm == null) lm = (android.location.LocationManager) getSystemService(LOCATION_SERVICE);
+
+        // Cek Developer Options
+        try {
+            lm.addTestProvider(LocationManager.GPS_PROVIDER, false, false, false, false, false, false, false, android.location.Criteria.POWER_LOW, android.location.Criteria.ACCURACY_FINE);
+            lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+        } catch (SecurityException e) {
+            android.widget.Toast.makeText(this, "⚠️ Harap atur Mock Location di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
+            return; 
+        } catch (Exception e) {}
+
+        // Ambil koordinat
+        latLng = mMap.getCameraPosition().target;
+
+        // Kirim perintah ke Service Baru
+        android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+        serviceIntent.putExtra("lat", latLng.latitude);
+        serviceIntent.putExtra("lng", latLng.longitude);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+
+        mockEnabled = true; // Set status berjalan
+        android.widget.Toast.makeText(this, "✅ Lokasi Dimulai!", android.widget.Toast.LENGTH_SHORT).show();
+
     } catch (Exception e) {
-        e.printStackTrace();
-        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-        return;
+        android.widget.Toast.makeText(this, "Sistem memproses... Silakan ulangi.", android.widget.Toast.LENGTH_SHORT).show();
     }
-    
-    // 2. Jika lolos validasi, jalankan mock provider & set lokasinya
-    if (!mockEnabled) {
-        startMockProvider();
-    }
+}
 
-    latLng = mMap.getCameraPosition().target;
-    setMockLocation(latLng.latitude, latLng.longitude);
-
-    try {
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-    } catch (SecurityException e) {
-        e.printStackTrace();
-    }
-    
-    // Jalankan layanan latar belakang (Foreground Service)
-	android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
-	serviceIntent.putExtra("lat", latLng.latitude); // <-- KIRIM LATITUDE
-	serviceIntent.putExtra("lng", latLng.longitude); // <-- KIRIM LONGITUDE
-	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-	    startForegroundService(serviceIntent);
-	} else {
-	    startService(serviceIntent);
-	}
-    }
     public void searchButton(View view){
         EditText editText = (EditText)findViewById(R.id.search_text);
         String address = editText.getText().toString();
@@ -277,26 +264,23 @@ public void startButton(View view) {
         }
     }
 
-public void stopButton(View view) {
-    // 1. Anti Force-Close: Cek dan inisialisasi ulang LocationManager jika null
-    try {
-        if (lm == null) {
-            lm = (android.location.LocationManager) getSystemService(LOCATION_SERVICE);
-        }
-        lm.removeTestProvider(android.location.LocationManager.GPS_PROVIDER);
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
+}
 
-    // 2. Matikan Foreground Service (yang berisi mesin pemancar)
+public void stopButton(View view) {
     try {
+        // Langsung matikan service, sisanya akan diurus otomatis oleh MockService
         android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
         stopService(serviceIntent);
+
+        // Pengaman ganda untuk mematikan mock provider
+        if (lm == null) lm = (android.location.LocationManager) getSystemService(LOCATION_SERVICE);
+        lm.removeTestProvider(android.location.LocationManager.GPS_PROVIDER);
     } catch (Exception e) {
-        e.printStackTrace();
+        // Abaikan jika sudah mati
     }
 
-    android.widget.Toast.makeText(this, "Lokasi Palsu Dihentikan", android.widget.Toast.LENGTH_SHORT).show();
+    mockEnabled = false; // Reset status
+    android.widget.Toast.makeText(this, "🛑 Lokasi Dihentikan", android.widget.Toast.LENGTH_SHORT).show();
 }
 
     private void performSearch(String address){

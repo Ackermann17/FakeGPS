@@ -38,23 +38,29 @@ public class MockService extends Service {
 
         Notification notification = builder
                 .setContentTitle("GPS Manual Aktif")
-                .setContentText("Lokasi terkunci dan memancar di latar belakang.")
+                .setContentText("Lokasi terkunci di latar belakang.")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)
                 .build();
         startForeground(1, notification);
 
-        // Tangkap koordinat yang dikirim dari MapsActivity
         if (intent != null) {
             final double lat = intent.getDoubleExtra("lat", 0);
             final double lng = intent.getDoubleExtra("lng", 0);
 
             if (lm == null) lm = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+            // 1. Tambahkan provider mandiri di dalam Service
+            try {
+                lm.addTestProvider(LocationManager.GPS_PROVIDER, false, false, false, false, false, false, false, android.location.Criteria.POWER_LOW, android.location.Criteria.ACCURACY_FINE);
+                lm.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true);
+            } catch (Exception e) {
+                // Abaikan jika sudah ditambahkan sistem
+            }
+
             isRunning = true;
             if (mockThread != null) mockThread.interrupt();
 
-            // Mesin pemancar lokasi dipindah ke sini agar kebal swipe
             mockThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -66,11 +72,13 @@ public class MockService extends Service {
                             loc.setAltitude(0);
                             loc.setAccuracy(1f);
                             loc.setTime(System.currentTimeMillis());
-                            loc.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                loc.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
+                            }
                             lm.setTestProviderLocation(LocationManager.GPS_PROVIDER, loc);
-                            Thread.sleep(1000); // Pancarkan setiap 1 detik
+                            Thread.sleep(1000);
                         } catch (Exception e) {
-                            // Abaikan error diam-diam agar thread tidak mati
+                            // Abaikan error diam-diam agar thread kebal
                         }
                     }
                 }
@@ -82,8 +90,12 @@ public class MockService extends Service {
 
     @Override
     public void onDestroy() {
-        isRunning = false; // Matikan mesin pemancar saat Service dihentikan
+        isRunning = false;
         if (mockThread != null) mockThread.interrupt();
+        // 2. Bersihkan provider saat tombol STOP ditekan
+        try {
+            if (lm != null) lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+        } catch (Exception e) {}
         super.onDestroy();
     }
 
