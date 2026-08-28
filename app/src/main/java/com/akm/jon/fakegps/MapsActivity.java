@@ -97,14 +97,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         newLocationGPS.setLongitude(longitude);
         newLocationGPS.setAccuracy(16F);
         newLocationGPS.setTime(System.currentTimeMillis());
-        newLocationGPS.setElapsedRealtimeNanos(System.nanoTime());
+        newLocationGPS.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
         newLocationGPS.setAltitude(0D);
         newLocationGPS.setBearing(0F);
         newLocationNET.setLatitude(latitude);
         newLocationNET.setLongitude(longitude);
         newLocationNET.setAccuracy(16F);
         newLocationNET.setTime(System.currentTimeMillis());
-        newLocationNET.setElapsedRealtimeNanos(System.nanoTime());
+        newLocationNET.android.os.SystemClock.elapsedRealtimeNanos());
         newLocationNET.setAltitude(0D);
         newLocationNET.setBearing(0F);
         lm.setTestProviderStatus(LocationManager.GPS_PROVIDER,
