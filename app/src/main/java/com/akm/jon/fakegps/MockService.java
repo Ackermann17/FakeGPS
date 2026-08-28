@@ -125,12 +125,21 @@ public class MockService extends Service {
         params.x = 100;
         params.y = 300;
 
-        // Inisialisasi Tombol Melayang
-        floatingButton = new Button(this);
-        floatingButton.setText("STOP MOCK");
-        floatingButton.setBackgroundColor(Color.RED);
-        floatingButton.setTextColor(Color.WHITE);
-        floatingButton.setPadding(30, 15, 30, 15);
+// Animasi membesar-mengecil (Pulsing)
+android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.15f);
+android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.15f);
+
+scaleX.setDuration(800);
+scaleY.setDuration(800);
+
+scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+
+scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+scaleY.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+
+scaleX.start();
+scaleY.start();
 
         // Tambahkan Touch Listener untuk Drag & Click Logic
         floatingButton.setOnTouchListener(new View.OnTouchListener() {
