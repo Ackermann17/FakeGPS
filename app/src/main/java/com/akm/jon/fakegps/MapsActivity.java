@@ -271,7 +271,15 @@ public void startButton(View view) {
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
-        } else {
+        }
+	if (arrayList != null && adapter != null) {
+            // Mencegah duplikat berurutan
+            if (arrayList.isEmpty() || !arrayList.get(0).equals(latLng)) {
+                arrayList.add(0, latLng); // Tambahkan ke urutan paling atas (index 0)
+                adapter.notifyDataSetChanged(); // Beritahu ListView untuk update
+            }
+        }
+	 else {
             startService(serviceIntent);
         }
 
@@ -289,37 +297,36 @@ public void startButton(View view) {
         performSearch(address);
     }
 
-    public void recentButton(View view){
-        if(!arrayList.isEmpty()){
-            if(list.getVisibility() == View.INVISIBLE){
-                list.setVisibility(View.VISIBLE);
-                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        LatLng recentLatLng = new LatLng(((LatLng) parent.getAdapter().getItem(position)).latitude, ((LatLng) parent.getAdapter().getItem(position)).longitude);
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(recentLatLng, 10));
-                        list.setVisibility(View.INVISIBLE);
-                    }
-                });
-            }else{
-                list.setVisibility(View.INVISIBLE);
-            }
-        }else{
-            showMessage("No recent locations");
+  public void recentButton(View view) {
+    // Pastikan arrayList tidak kosong
+    if (arrayList != null && !arrayList.isEmpty()) {
+        
+        // Toggle (Buka/Tutup) ListView
+        if (list.getVisibility() == android.view.View.INVISIBLE || list.getVisibility() == android.view.View.GONE) {
+            list.setVisibility(android.view.View.VISIBLE);
+            
+            // Set aksi ketika salah satu riwayat diklik
+            list.setOnItemClickListener(new android.widget.AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                    // Pindah kamera ke lokasi recent yang diklik
+                    com.google.android.gms.maps.model.LatLng recentLatLng = arrayList.get(position);
+                    mMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(recentLatLng, 15)); // Zoom level 15
+                    
+                    // Sembunyikan list setelah diklik
+                    list.setVisibility(android.view.View.INVISIBLE);
+                }
+            });
+        } else {
+            // Jika sedang terbuka, maka tutup
+            list.setVisibility(android.view.View.INVISIBLE);
         }
-        showMessage(String.valueOf(latLng));
-        FileInputStream inputStream;
-        try {
-            inputStream = openFileInput(SAVED_SETTINGS);
-            ObjectInputStream in = new ObjectInputStream(inputStream);
-            showMessage("mockBoolean" +  String.valueOf(in.readBoolean()));
-            showMessage("latLng" + String.valueOf(in.readObject()));
-            inputStream.close();
-            in.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        
+    } else {
+        // Tampilkan pesan jika belum ada riwayat
+        android.widget.Toast.makeText(this, "Belum ada riwayat lokasi", android.widget.Toast.LENGTH_SHORT).show();
     }
+}
 
 public void stopButton(View view) {
     try {
