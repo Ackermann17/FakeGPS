@@ -119,6 +119,30 @@ private void checkAndRequestOverlayPermission() {
     }
 }
 
+private void startMockService() {
+    latLng = mMap.getCameraPosition().target;
+    android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+    serviceIntent.putExtra("lat", latLng.latitude);
+    serviceIntent.putExtra("lng", latLng.longitude);
+
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        startForegroundService(serviceIntent);
+    } else {
+        startService(serviceIntent);
+    }
+    
+    mockEnabled = true;
+    android.widget.Toast.makeText(this, "✅ Lokasi Dimulai!", android.widget.Toast.LENGTH_SHORT).show();
+}
+
+private void stopMockService() {
+    android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
+    stopService(serviceIntent);
+    
+    mockEnabled = false;
+    android.widget.Toast.makeText(this, "🛑 Lokasi Dihentikan!", android.widget.Toast.LENGTH_SHORT).show();
+}
+
 private void setMockLocation(final double latitude, final double longitude) {
     if (mockRunnable != null) {
         mockHandler.removeCallbacks(mockRunnable);
@@ -228,12 +252,10 @@ public void startButton(View view) {
             return;
         } catch (Exception e) {}
 
-        // KODE 2: Cek izin Overlay / Pop-up Xiaomi sebelum kirim Intent
+        // Cek izin Overlay / Pop-up Xiaomi sebelum kirim Intent
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             if (!android.provider.Settings.canDrawOverlays(this)) {
                 android.widget.Toast.makeText(this, "Izinkan 'Tampilkan di atas aplikasi lain' / 'Jendela pop-up'", android.widget.Toast.LENGTH_LONG).show();
-                
-                // Jika di HP Xiaomi, langsung arahkan ke menu di screenshot Anda (Kode 3)
                 openMiuiPermissionScreen();
                 return;
             }
@@ -242,7 +264,7 @@ public void startButton(View view) {
         // Ambil koordinat
         latLng = mMap.getCameraPosition().target;
 
-        // Kirim perintah ke Service baru
+        // Kirim perintah ke Service
         android.content.Intent serviceIntent = new android.content.Intent(this, MockService.class);
         serviceIntent.putExtra("lat", latLng.latitude);
         serviceIntent.putExtra("lng", latLng.longitude);
