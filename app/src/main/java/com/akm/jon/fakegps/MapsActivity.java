@@ -332,6 +332,25 @@ public void onMapReady(GoogleMap googleMap) {
                         isFirstLocation = false;
                     }
                 }
+	    });
+	    mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+        private com.google.android.gms.maps.model.Marker currentMarker;
+
+        @Override
+        public void onMapClick(com.google.android.gms.maps.model.LatLng point) {
+            // Hapus marker sebelumnya jika sudah ada supaya tidak menumpuk
+            if (currentMarker != null) {
+                currentMarker.remove();
+            }
+
+            // Tambahkan marker baru di titik yang diklik
+            currentMarker = mMap.addMarker(new com.google.android.gms.maps.model.MarkerOptions()
+                    .position(point)
+                    .title("Tujuan Mock Lokasi"));
+
+            // Geser kamera secara halus ke titik yang diklik
+            mMap.animateCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLng(point));
+        }
             });
         }
     } catch (SecurityException e) {
