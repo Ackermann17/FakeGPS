@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 34
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "com.example.jon.fakegps"
-        minSdkVersion 18
-        targetSdkVersion 30
+        applicationId "com.akm.jon.fakegps"
+        minSdkVersion 30
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
     }
@@ -16,6 +16,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
