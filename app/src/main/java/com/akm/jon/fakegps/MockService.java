@@ -125,21 +125,22 @@ public class MockService extends Service {
         params.x = 100;
         params.y = 300;
 
-// Animasi membesar-mengecil (Pulsing)
-android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.15f);
-android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.15f);
+// KODE BARU (Bulat / Circular Floating Widget)
+floatingButton = new Button(this);
+floatingButton.setText("■"); // Simbol Stop (atau isi dengan "STOP")
+floatingButton.setTextSize(18f);
+floatingButton.setTextColor(Color.WHITE);
 
-scaleX.setDuration(800);
-scaleY.setDuration(800);
+// Membuat background bulat berwarna merah
+android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+shape.setColor(Color.RED);
+floatingButton.setBackground(shape);
 
-scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-
-scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-scaleY.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-
-scaleX.start();
-scaleY.start();
+// Mengatur ukuran tombol agar simetris (misal 60dp x 60dp)
+int sizeInPx = (int) (60 * getResources().getDisplayMetrics().density);
+params.width = sizeInPx;
+params.height = sizeInPx;
 
         // Tambahkan Touch Listener untuk Drag & Click Logic
         floatingButton.setOnTouchListener(new View.OnTouchListener() {
