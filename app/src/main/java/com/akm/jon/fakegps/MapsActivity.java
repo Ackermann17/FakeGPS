@@ -192,26 +192,39 @@ private void setMockLocation(final double latitude, final double longitude) {
     }
 
     public void startButton(View view) {
-	try {
-        lm.addTestProvider(LocationManager.GPS_PROVIDER,
-                false, false, false, false, false, false, false,
-                android.location.Criteria.POWER_LOW,
-                android.location.Criteria.ACCURACY_FINE);
-        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-    } catch (SecurityException e) {
-        // Jika gagal, berarti belum dipilih di Developer Options
-        android.widget.Toast.makeText(this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
-        return; // Batalkan proses start
-    }
-        if(!mockEnabled)
-            startMockProvider();
-        latLng = mMap.getCameraPosition().target;
-        setMockLocation(latLng.latitude, latLng.longitude);
-        try {
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-        }catch(SecurityException e) {e.printStackTrace();}
-    }
+    // 1. Cek apakah Mock Location sudah diaktifkan di Developer Options
+	    try {
+	        lm.addTestProvider(LocationManager.GPS_PROVIDER,
+	                false, false, false, false, false, false, false,
+	                android.location.Criteria.POWER_LOW,
+	                android.location.Criteria.ACCURACY_FINE);
+	        lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+	    } catch (SecurityException e) {
+	        // Jika belum dipilih di Developer Options
+	        android.widget.Toast.makeText(this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
+	        return; 
+	    } catch (Exception e) {
+	        // Menangkap error konflik provider agar tidak Force Close
+	        e.printStackTrace();
+	    }
+
+	    // 2. Jalankan inisialisasi provider jika belum aktif
+	    if (!mockEnabled) {
+	        startMockProvider();
+	    }
+
+	    // 3. Ambil koordinat dan mulai memancarkan lokasi palsu
+	    latLng = mMap.getCameraPosition().target;
+	    setMockLocation(latLng.latitude, latLng.longitude);
+
+	    try {
+	        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+	        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
+	    } catch (SecurityException e) {
+	        e.printStackTrace();
+	    }
+	}
+
 
     public void searchButton(View view){
         EditText editText = (EditText)findViewById(R.id.search_text);
