@@ -94,9 +94,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         lm.setTestProviderEnabled(LocationManager.NETWORK_PROVIDER, true);
     }
 
-    private android.os.Handler mockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-private Runnable mockRunnable;
-
+    
 private void setMockLocation(final double latitude, final double longitude) {
     if (mockRunnable != null) {
         mockHandler.removeCallbacks(mockRunnable);
