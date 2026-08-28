@@ -1,4 +1,4 @@
-packagecom.akm.jon.fakegps;
+package com.akm.jon.fakegps;
 
 import com.akm.jon.fakegps.R;
 import android.content.Context;
