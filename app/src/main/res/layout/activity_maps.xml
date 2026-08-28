@@ -1,89 +1,107 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:map="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.jon.fakegps.MapsActivity"
-    tools:layout="@layout/activity_maps">
+    tools:context="com.akm.jon.fakegps.MapsActivity">
 
-    <Button
-        android:textColor="#ffffff"
-        android:background="#41d21d"
-        android:onClick="startButton"
-        android:id="@+id/start_button"
-        android:layout_width="wrap_content"
+    <!-- 1. Peta Google Maps (Paling Belakang) -->
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 2. BAGIAN ATAS: Search text, tombol Search, & Recent -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|top"
-        android:text="@string/start_button"
-        android:padding="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"/>
-    <Button
-        android:textColor="#ffffff"
-        android:background="#ff0000"
-        android:onClick="stopButton"
-        android:id="@+id/stop_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|top"
-        android:text="@string/stop_button"
-        android:padding="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"/>
-    <Button
-        android:onClick="searchButton"
-        android:id="@+id/search_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:text="@string/search_button"
-        android:padding="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"/>
-    <Button
-        android:onClick="recentButton"
-        android:id="@+id/recent_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|top"
-        android:text="@string/recent_button"
-        android:padding="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"/>
-    <EditText
-        android:imeOptions="actionSearch"
-        android:inputType="text"
-        android:singleLine="true"
-        android:id="@+id/search_text"
-        android:background="#ffffff"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="@string/search_address"
-        android:layout_gravity="start|bottom"
-        android:padding="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"/>
+        android:orientation="horizontal"
+        android:layout_gravity="top"
+        android:background="#99FFFFFF"
+        android:padding="6dp">
+
+        <EditText
+            android:id="@+id/search_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/search_address"
+            android:inputType="text"
+            android:singleLine="true"
+            android:imeOptions="actionSearch"
+            android:background="#ffffff"
+            android:padding="8dp" />
+
+        <Button
+            android:id="@+id/search_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="searchButton"
+            android:text="SEARCH"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:padding="8dp" />
+
+        <Button
+            android:id="@+id/recent_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/recent_button"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:padding="8dp" />
+    </LinearLayout>
+
+    <!-- 3. TENGAH: Pin Marker & ListView Riwayat -->
     <ImageView
-        tools:ignore="contentDescription"
+        android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:paddingBottom="27dp"
-        android:id="@+id/imageView" />
+        tools:ignore="contentDescription" />
+
     <ListView
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
         android:background="#7d2323"
-        android:visibility="invisible"
+        android:visibility="invisible" />
+
+    <!-- 4. BAGIAN BAWAH-TENGAH: Tombol START dan STOP -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:id="@+id/listView"
-        />
+        android:orientation="horizontal"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:elevation="8dp">
 
-</fragment>
+        <Button
+            android:id="@+id/start_button"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:background="#41d21d"
+            android:onClick="startButton"
+            android:text="@string/start_button"
+            android:textColor="#ffffff"
+            android:layout_marginEnd="6dp"
+            android:padding="10dp" />
+
+        <Button
+            android:id="@+id/stop_button"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:background="#ff0000"
+            android:onClick="stopButton"
+            android:text="@string/stop_button"
+            android:textColor="#ffffff"
+            android:layout_marginStart="6dp"
+            android:padding="10dp" />
+    </LinearLayout>
+
+</FrameLayout>
+
