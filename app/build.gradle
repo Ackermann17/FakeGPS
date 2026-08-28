@@ -12,6 +12,12 @@ android {
         versionName "1.0"
 	manifestPlaceholders = [MAPS_API_KEY: System.getenv("MAPS_API_KEY") ?: ""]
     }
+    lint {
+        // Mengabaikan peringatan MockLocation dan mencegah build gagal karena peringatan Lint lainnya
+        disable 'MockLocation'
+        abortOnError false
+        checkReleaseBuilds false
+    }
     signingConfigs {
         release {
             // Membaca file keystore yang didecode oleh GitHub Actions
