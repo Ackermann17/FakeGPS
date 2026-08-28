@@ -191,7 +191,14 @@ private void setMockLocation(final double latitude, final double longitude) {
         list.setAdapter(adapter);
     }
     
+}
+
 public void startButton(View view) {
+    // Pastikan LocationManager sudah siap
+    if (lm == null) {
+        lm = (android.location.LocationManager) getSystemService(LOCATION_SERVICE);
+    }
+
     // 1. Validasi ketat Developer Options
     try {
         lm.addTestProvider(LocationManager.GPS_PROVIDER,
@@ -200,11 +207,9 @@ public void startButton(View view) {
                 android.location.Criteria.ACCURACY_FINE);
         lm.removeTestProvider(LocationManager.GPS_PROVIDER);
     } catch (SecurityException e) {
-        // Jalur A: Belum dipilih di Developer Options
-        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Belum diatur di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
+        android.widget.Toast.makeText(MapsActivity.this, "⚠️ Harap pilih aplikasi ini sebagai Mock Location app di Developer Options!", android.widget.Toast.LENGTH_LONG).show();
         return; 
     } catch (Exception e) {
-        // Jalur B: Terjadi error sistem lain
         e.printStackTrace();
         android.widget.Toast.makeText(MapsActivity.this, "⚠️ Error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
         return;
@@ -225,7 +230,6 @@ public void startButton(View view) {
         e.printStackTrace();
     }
 }
-
 
     public void searchButton(View view){
         EditText editText = (EditText)findViewById(R.id.search_text);
