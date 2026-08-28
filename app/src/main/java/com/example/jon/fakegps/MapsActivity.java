@@ -1,5 +1,6 @@
 package com.example.jon.fakegps;
 
+import com.akm.jon.fakegps.R;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
