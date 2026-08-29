@@ -241,6 +241,8 @@ public class MockService extends Service {
             floatingContainer = null;
             floatingButton = null;
         }
+	super.onDestroy();
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
