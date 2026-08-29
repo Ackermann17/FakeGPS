@@ -138,6 +138,13 @@ public class MockService extends Service {
             floatingButton.setTextSize(24f);
             floatingButton.setTextColor(Color.WHITE);
 
+	    floatingButton.setPadding(0, 0, 0, 0); // Hapus jarak tepi bawaan Android
+            floatingButton.setGravity(Gravity.CENTER); // Paksa teks persis di tengah
+            floatingButton.setIncludeFontPadding(false); // Hapus spasi font ekstra
+            // Sangat Penting: Biarkan wadah (container) yang merespon sentuhan, bukan tombolnya
+            floatingButton.setClickable(false);
+            floatingButton.setFocusable(false);
+
             android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
             shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
             shape.setColor(Color.RED);
