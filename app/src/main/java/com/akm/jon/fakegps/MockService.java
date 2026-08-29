@@ -29,6 +29,7 @@ public class MockService extends Service {
     // UI Overlay (Floating Button)
     private WindowManager windowManager;
     private Button floatingButton;
+    private android.widget.FrameLayout floatingContainer;
     private WindowManager.LayoutParams params;
 
     @Override
@@ -103,84 +104,103 @@ public class MockService extends Service {
     }
 
     private void createFloatingWindow() {
-        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        
-        // ... (KODE layoutFlag & params.y = 300; TETAP SAMA) ...
-
-        // 1. Buat Wadah Transparan (FrameLayout)
-        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
-
-        // 2. Desain Tombol Bulat
-        floatingButton = new Button(this);
-        floatingButton.setText("■"); 
-        floatingButton.setTextSize(18f); // Dikecilkan sedikit agar kotak putih tidak kebesaran
-        floatingButton.setTextColor(Color.WHITE);
-
-        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
-        shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-        shape.setColor(Color.RED);
-        floatingButton.setBackground(shape);
-
-        // 3. Ukuran Asli Tombol (misal 45dp)
-        int btnSize = (int) (45 * getResources().getDisplayMetrics().density);
-        android.widget.FrameLayout.LayoutParams btnParams = new android.widget.FrameLayout.LayoutParams(btnSize, btnSize);
-        btnParams.gravity = Gravity.CENTER; // Taruh tombol tepat di tengah wadah
-        container.addView(floatingButton, btnParams);
-
-        // 4. Ukuran WindowManager DIBUAT LEBIH BESAR (misal 70dp) untuk ruang denyut
-        int windowSize = (int) (70 * getResources().getDisplayMetrics().density);
-        params.width = windowSize;
-        params.height = windowSize;
-
-        // 5. Touch Listener Dipasang pada Container
-        container.setOnTouchListener(new View.OnTouchListener() {
-            private int initialX, initialY;
-            private float initialTouchX, initialTouchY;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initialX = params.x;
-                        initialY = params.y;
-                        initialTouchX = event.getRawX();
-                        initialTouchY = event.getRawY();
-                        return true;
-
-                    case MotionEvent.ACTION_MOVE:
-                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
-                        params.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        // Perbarui posisi berdasarkan container
-                        windowManager.updateViewLayout(container, params);
-                        return true;
-
-                    case MotionEvent.ACTION_UP:
-                        int diffX = (int) (event.getRawX() - initialTouchX);
-                        int diffY = (int) (event.getRawY() - initialTouchY);
-                        if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
-                            floatingButton.performClick();
-                            stopSelf(); // Hentikan Service
-                        }
-                        return true;
-                }
-                return false;
+        try {
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            
+            int layoutFlag;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            } else {
+                layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
             }
-        });
 
-        // 6. Masukkan Wadah ke Layar (BUKAN tombolnya langsung)
-        windowManager.addView(container, params);
+            params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    layoutFlag,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT
+            );
 
-        // 7. Animasi Denyut (Dipasang hanya pada tombol di dalam wadah)
-        android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.25f);
-        android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.25f);
-        scaleX.setDuration(800);
-        scaleY.setDuration(800);
-        scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-        scaleY.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-        scaleX.start();
-        scaleY.start();
+            params.gravity = Gravity.TOP | Gravity.START;
+            params.x = 100;
+            params.y = 300;
+
+            // 1. Buat Wadah secara Global
+            floatingContainer = new android.widget.FrameLayout(this);
+            int windowSize = (int) (70 * getResources().getDisplayMetrics().density);
+            params.width = windowSize;
+            params.height = windowSize;
+
+            // 2. Buat Tombol Bulat
+            floatingButton = new Button(this);
+            floatingButton.setText("■");
+            floatingButton.setTextSize(24f);
+            floatingButton.setTextColor(Color.WHITE);
+
+            android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+            shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            shape.setColor(Color.RED);
+            floatingButton.setBackground(shape);
+
+            int btnSize = (int) (45 * getResources().getDisplayMetrics().density);
+            android.widget.FrameLayout.LayoutParams btnParams = new android.widget.FrameLayout.LayoutParams(btnSize, btnSize);
+            btnParams.gravity = Gravity.CENTER;
+            floatingContainer.addView(floatingButton, btnParams);
+
+            // 3. Listener Sentuhan pada Container
+            floatingContainer.setOnTouchListener(new View.OnTouchListener() {
+                private int initialX, initialY;
+                private float initialTouchX, initialTouchY;
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            initialX = params.x;
+                            initialY = params.y;
+                            initialTouchX = event.getRawX();
+                            initialTouchY = event.getRawY();
+                            return true;
+
+                        case MotionEvent.ACTION_MOVE:
+                            params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                            params.y = initialY + (int) (event.getRawY() - initialTouchY);
+                            windowManager.updateViewLayout(floatingContainer, params);
+                            return true;
+
+                        case MotionEvent.ACTION_UP:
+                            int diffX = (int) (event.getRawX() - initialTouchX);
+                            int diffY = (int) (event.getRawY() - initialTouchY);
+                            // Jika klik (bukan digeser)
+                            if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
+                                stopSelf(); 
+                            }
+                            return true;
+                    }
+                    return false;
+                }
+            });
+
+            // 4. Masukkan Wadah ke Layar
+            windowManager.addView(floatingContainer, params);
+
+            // 5. Jalankan Animasi Denyut
+            android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.25f);
+            android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.25f);
+            scaleX.setDuration(800);
+            scaleY.setDuration(800);
+            scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+            scaleY.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+            scaleX.start();
+            scaleY.start();
+
+        } catch (Exception e) {
+            // Pengaman agar tidak Force Close, melainkan memunculkan pesan error
+            android.widget.Toast.makeText(this, "Error Tombol: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+        }
     }
 
     private void createNotificationChannel() {
@@ -214,18 +234,13 @@ public class MockService extends Service {
         } catch (Exception ignored) {}
 
         // Hapus Floating Overlay View dari Layar
-	if (floatingButton != null && windowManager != null) {
-	        // Ambil wadah pembungkus tombol dan hapus dari layar
-	        View parent = (View) floatingButton.getParent();
-	        if (parent != null) {
-	            windowManager.removeView(parent);
-	        } else {
-	            windowManager.removeView(floatingButton);
-	        }
-	        floatingButton = null;
-	    }
-        super.onDestroy();
-    }
+	if (floatingContainer != null && windowManager != null) {
+            try {
+                windowManager.removeView(floatingContainer);
+            } catch (Exception e) {}
+            floatingContainer = null;
+            floatingButton = null;
+        }
 
     @Override
     public IBinder onBind(Intent intent) {
