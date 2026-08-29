@@ -104,46 +104,36 @@ public class MockService extends Service {
 
     private void createFloatingWindow() {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        
+        // ... (KODE layoutFlag & params.y = 300; TETAP SAMA) ...
 
-        // Pengaturan Tipe Layout Window (Support Android versi lama dan baru)
-        int layoutFlag;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
-        }
+        // 1. Buat Wadah Transparan (FrameLayout)
+        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
 
-        params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                layoutFlag,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT
-        );
+        // 2. Desain Tombol Bulat
+        floatingButton = new Button(this);
+        floatingButton.setText("■"); 
+        floatingButton.setTextSize(18f); // Dikecilkan sedikit agar kotak putih tidak kebesaran
+        floatingButton.setTextColor(Color.WHITE);
 
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 100;
-        params.y = 300;
+        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+        shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        shape.setColor(Color.RED);
+        floatingButton.setBackground(shape);
 
-	// KODE BARU (Bulat / Circular Floating Widget)
-	floatingButton = new Button(this);
-	floatingButton.setText("■"); // Simbol Stop (atau isi dengan "STOP")
-	floatingButton.setTextSize(18f);
-	floatingButton.setTextColor(Color.WHITE);
+        // 3. Ukuran Asli Tombol (misal 45dp)
+        int btnSize = (int) (45 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout.LayoutParams btnParams = new android.widget.FrameLayout.LayoutParams(btnSize, btnSize);
+        btnParams.gravity = Gravity.CENTER; // Taruh tombol tepat di tengah wadah
+        container.addView(floatingButton, btnParams);
 
-	// Membuat background bulat berwarna merah
-	android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
-	shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-	shape.setColor(Color.RED);
-	floatingButton.setBackground(shape);
+        // 4. Ukuran WindowManager DIBUAT LEBIH BESAR (misal 70dp) untuk ruang denyut
+        int windowSize = (int) (70 * getResources().getDisplayMetrics().density);
+        params.width = windowSize;
+        params.height = windowSize;
 
-	// Mengatur ukuran tombol agar simetris (misal 60dp x 60dp)
-	int sizeInPx = (int) (45 * getResources().getDisplayMetrics().density);
-	params.width = sizeInPx;
-	params.height = sizeInPx;
-
-        // Tambahkan Touch Listener untuk Drag & Click Logic
-        floatingButton.setOnTouchListener(new View.OnTouchListener() {
+        // 5. Touch Listener Dipasang pada Container
+        container.setOnTouchListener(new View.OnTouchListener() {
             private int initialX, initialY;
             private float initialTouchX, initialTouchY;
 
@@ -160,16 +150,16 @@ public class MockService extends Service {
                     case MotionEvent.ACTION_MOVE:
                         params.x = initialX + (int) (event.getRawX() - initialTouchX);
                         params.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        windowManager.updateViewLayout(floatingButton, params);
+                        // Perbarui posisi berdasarkan container
+                        windowManager.updateViewLayout(container, params);
                         return true;
 
                     case MotionEvent.ACTION_UP:
                         int diffX = (int) (event.getRawX() - initialTouchX);
                         int diffY = (int) (event.getRawY() - initialTouchY);
-                        // Jika tidak ada pergeseran berarti aksi Klik
                         if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
-                            v.performClick();
-                            stopSelf(); // Hentikan Service dan Mocking
+                            floatingButton.performClick();
+                            stopSelf(); // Hentikan Service
                         }
                         return true;
                 }
@@ -177,19 +167,18 @@ public class MockService extends Service {
             }
         });
 
-        windowManager.addView(floatingButton, params);
-	android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.15f);
-        android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.15f);
-        
-        scaleX.setDuration(800); // Kecepatan membesar (800ms)
+        // 6. Masukkan Wadah ke Layar (BUKAN tombolnya langsung)
+        windowManager.addView(container, params);
+
+        // 7. Animasi Denyut (Dipasang hanya pada tombol di dalam wadah)
+        android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleX", 1.0f, 1.25f);
+        android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(floatingButton, "scaleY", 1.0f, 1.25f);
+        scaleX.setDuration(800);
         scaleY.setDuration(800);
-        
-        scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE); // Ulangi terus
+        scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
         scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        
-        scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE); // Membesar lalu mengecil
+        scaleX.setRepeatMode(android.animation.ValueAnimator.REVERSE);
         scaleY.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-        
         scaleX.start();
         scaleY.start();
     }
