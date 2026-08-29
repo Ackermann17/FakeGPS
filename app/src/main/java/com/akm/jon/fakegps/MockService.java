@@ -214,11 +214,16 @@ public class MockService extends Service {
         } catch (Exception ignored) {}
 
         // Hapus Floating Overlay View dari Layar
-        if (floatingButton != null && windowManager != null) {
-            windowManager.removeView(floatingButton);
-            floatingButton = null;
-        }
-
+	if (floatingButton != null && windowManager != null) {
+	        // Ambil wadah pembungkus tombol dan hapus dari layar
+	        View parent = (View) floatingButton.getParent();
+	        if (parent != null) {
+	            windowManager.removeView(parent);
+	        } else {
+	            windowManager.removeView(floatingButton);
+	        }
+	        floatingButton = null;
+	    }
         super.onDestroy();
     }
 
